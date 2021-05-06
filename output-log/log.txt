@@ -1,0 +1,15 @@
+buildClinets
+net___input_shape= [None, 28, 28, 1]
+def conv___input_channels= 1
+def conv___input_channels= 20
+net done
+Extracting location\train-images-idx3-ubyte.gz
+Extracting location\train-labels-idx1-ubyte.gz
+Extracting location\t10k-images-idx3-ubyte.gz
+Extracting location\t10k-labels-idx1-ubyte.gz
+[epoch 1, 600 inst] Testing ACC: 0.1333, Loss: 2.2980
+[epoch 2, 600 inst] Testing ACC: 0.0933, Loss: 2.3089
+[epoch 3, 600 inst] Testing ACC: 0.0967, Loss: 2.3042
+[epoch 4, 600 inst] Testing ACC: 0.1433, Loss: 2.2944
+[epoch 5, 600 inst] Testing ACC: 0.1117, Loss: 2.3027
+[epoch 5, 10000 inst] Testing ACC: 0.1128, Loss: 2.3029
