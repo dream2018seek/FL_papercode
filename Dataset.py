@@ -10,10 +10,12 @@ from function import load_data_mnist
 
 class BatchGenerator:
     def __init__(self, x, yy):
+        # 这里传入的是当前Cid拥有的所有train_data
         self.x = x
         self.y = yy
+        # en(x)=5500
         self.size = len(x)
-        print("BatchGenerator_self.size", self.size)
+        print("BatchGenerator_self.size=", self.size)
         # 把len(x)长度作为一个从0开始的有顺序序列range(len(x))，并记录到list中打乱后作为索引
         self.random_order = list(range(len(x)))
         np.random.shuffle(self.random_order)

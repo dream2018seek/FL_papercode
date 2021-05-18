@@ -75,24 +75,39 @@ class Clients:
         return self.sess.run([self.model.acc_op, self.model.loss_op],
                              feed_dict=feed_dict)
 
-    def train_epoch(self, cid, batch_size=32, dropout_rate=0.3):
+    def train_epoch(self, cid, batch_size=64, dropout_rate=0.3,  noise_proportion=0):
         """
             Train one client with its own data for one epoch
             用`cid`号的client的数据对模型进行训练
             cid: Client id
         """
+        # Client_num=10
+        # dataset.size = 5500
+        # dataset.x.shape = (5500,28,28,1)
+        # dataset.y.shape = (5500,10)
+        # start = 0
         dataset = self.dataset.train[cid]
 
         with self.graph.as_default():
-            for _ in range(math.ceil(dataset.size / batch_size)):
+            # math.ceil向上取整：这里表示用客户端的所有数据进行小批量batch训练
+            # ceil(5500/32)=172
+            # for _ in range(math.ceil(dataset.size / batch_size)):
+            for _ in range(math.floor(dataset.size / batch_size)):
+                # batch_x.shape:(32, 28, 28, 1), batch_y.shape:(32, 10)
                 batch_x, batch_y = dataset.next_batch(batch_size)
-                # print('batch_x.shape:%d, batch_y.shape:%s', batch_x.shape, batch_y.shape)
+                # print('batch_x.shape:{}, batch_y.shape:{}'.format(batch_x.shape, batch_y.shape))
+                batch_noise = np.random.rand(math.floor(noise_proportion * batch_size), 28, 28, 1).astype(float)
+                batch_zeros = np.zeros((batch_size - math.floor(noise_proportion * batch_size), 28, 28, 1))
+                batch_0 = np.vstack((batch_noise, batch_zeros))
+                batch_0 = (batch_x + batch_0) % 1.0
+                batch_1 = batch_y
                 feed_dict = {
-                    self.model.X: batch_x,
-                    self.model.Y: batch_y,
+                    self.model.X: batch_0,
+                    self.model.Y: batch_1,
                     self.model.DROP_RATE: dropout_rate
                 }
                 self.sess.run(self.model.train_op, feed_dict=feed_dict)
+                # print('Cid({}).model.loss_op={}'.format(cid, self.model.loss_op))
 
     def get_client_vars(self):
         """ Return all of the variables list """
@@ -108,13 +123,14 @@ class Clients:
 
     # 给客户端传入全局模型
     def set_global_vars(self, global_vars):
-        # 为所有变量分配全局变量
+        # 将全局的模型变量-赋值-到当前的变量中
         """ Assign all of the variables with global vars """
         with self.graph.as_default():
             # 返回使用 trainable=True 创建的所有变量
             all_vars = tf.trainable_variables()
             # zip() 函数用于将可迭代的对象作为参数，将对象中对应的元素打包成一个个元组，然后返回由这些元组组成的列表。
             # 也就是说通过使用zip将1个all_vars和1个global_vars打包成一个元组
+            # 这里是把global_vars里的各个参数一个个赋值到variable中
             for variable, value in zip(all_vars, global_vars):
                 variable.load(value, self.sess)
 

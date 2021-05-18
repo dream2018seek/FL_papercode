@@ -7,7 +7,7 @@ import sys
 
 import tensorflow as tf
 from tqdm import tqdm
-
+import numpy as np
 from Client import Clients
 
 '''
@@ -60,8 +60,12 @@ epoch = 1
 client = buildClients(CLIENT_NUMBER)
 
 # BEGIN TRAINING ####
-# -全局初始化的模型是一样的，直接读取客户端上的预训练模型
+# global_vars返回的是网络的结构
 global_vars = client.get_client_vars()
+noise_proportion_control = 0
+clean_client_rate = 0.2
+clean_client_num = CLIENT_NUMBER * clean_client_rate
+clean_client_list = np.array(0, clean_client_num, 1)
 for ep in range(epoch):
     # We are going to sum up active clients' vars at each epoch
     # 用来收集Clients端的参数，全部叠加起来（节约内存）
@@ -80,7 +84,8 @@ for ep in range(epoch):
 
         # train one client
         # 这个下标的Client进行训练
-        client.train_epoch(cid=client_id)
+        client.train_epoch(cid=client_id,
+                           noise_proportion=noise_proportion_control)
 
         # obtain current client's vars
         # 获取当前Client的模型变量值
@@ -88,6 +93,8 @@ for ep in range(epoch):
 
         # sum it up
         # 把各个层的参数叠加起来
+        # 这里不能直接累加起来，要改为依据条件生成权重---
+        # 也就是说可以先用元组的方式保存起来，然后后面再分别读取修改
         if client_vars_sum is None:
             client_vars_sum = current_client_vars
         else:
@@ -103,6 +110,7 @@ for ep in range(epoch):
 
     # run test on 600 instances
     # 跑一下测试集、输出一下
+    # run_test也可以自己设置为单独的
     run_global_test(client, global_vars, test_num=600)
 
 # FINAL TEST#

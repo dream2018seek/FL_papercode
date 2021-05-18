@@ -111,6 +111,7 @@ def conv(x, filter_height, filter_width, num_filters,
         biases = tf.get_variable('biases', shape=[num_filters])
 
     if groups == 1:
+        # conv1 = conv(X, 5, 5, 20, 1, 1, padding='VALID', name='conv1')
         conv = convolve(x, weights)
 
     # In the cases of multiple groups, split inputs & weights and
